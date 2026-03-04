@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe Pedagogía en Educación Física Universidad Andrés Bello</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Marked.js para renderizar Markdown de la IA -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Configuración de Tailwind para Tema UNAB -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        unab: {
+                            blue: '#001B3D',       
+                            panel: '#002855',      
+                            red: '#BA0C2F',        
+                            redHover: '#8A0923',   
+                            white: '#FFFFFF',      
+                            gray: '#E2E8F0',       
+                            border: '#003A7A'      
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #001B3D; }
+        ::-webkit-scrollbar-thumb { background: #003A7A; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #BA0C2F; }
+
+        .typing-indicator span {
+            display: inline-block; width: 6px; height: 6px; background-color: #FFFFFF; border-radius: 50%; margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        .markdown-body ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; color: #E2E8F0; }
+        .markdown-body ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 1rem; color: #E2E8F0; }
+        .markdown-body p { margin-bottom: 1rem; line-height: 1.7; color: #E2E8F0; }
+        .markdown-body h3 { font-size: 1.3rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #FFFFFF; border-bottom: 1px solid #003A7A; padding-bottom: 0.25rem; }
+        .markdown-body h4 { font-size: 1.1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; color: #FFFFFF; }
+        .markdown-body strong { color: #FFFFFF; font-weight: 700; }
+        .markdown-body blockquote { border-left: 4px solid #BA0C2F; padding-left: 1rem; margin-left: 0; color: #A0AABF; font-style: italic; }
+        
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-unab-blue text-unab-gray font-sans h-screen flex overflow-hidden selection:bg-unab-red selection:text-white">
+
+    <!-- Modal de Autenticación (API Key) -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center backdrop-blur-sm hidden">
+        <div class="bg-unab-panel border border-unab-border p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-lock text-4xl text-unab-red mb-4"></i>
+                <h2 class="text-2xl font-bold text-white mb-2">Acceso Institucional</h2>
+                <p class="text-unab-gray text-sm">Para activar el motor de Inteligencia Artificial, ingrese su clave de acceso (Google Gemini API Key).</p>
+            </div>
+            <input type="password" id="api-key-input" class="w-full bg-unab-blue border border-unab-border text-white px-4 py-3 rounded-lg mb-4 focus:outline-none focus:border-unab-red" placeholder="Pegue su API Key aquí...">
+            <button onclick="saveApiKey()" class="w-full bg-unab-red hover:bg-unab-redHover text-white font-bold py-3 rounded-lg transition-colors">
+                Activar Portal
+            </button>
+            <p class="text-xs text-unab-gray/50 mt-4 text-center">La clave se guarda localmente en su navegador y no se comparte con terceros.</p>
+        </div>
+    </div>
+
+    <!-- Sidebar Lateral -->
+    <aside class="w-80 bg-unab-panel border-r border-unab-border flex flex-col hidden md:flex transition-all duration-300 shadow-2xl z-20">
+        <div class="p-6 border-b border-unab-border bg-unab-blue">
+            <h1 class="text-unab-white font-bold text-lg flex items-center gap-3">
+                <i class="fa-solid fa-shield-halved text-unab-red text-2xl"></i>
+                <span class="leading-tight">Análisis Institucional<br><span class="text-xs font-normal text-unab-gray">Pedagogía en Educación Física</span></span>
+            </h1>
+        </div>
+
+        <div class="p-4">
+            <button onclick="resetChat()" class="w-full flex items-center justify-center gap-2 bg-unab-red hover:bg-unab-redHover text-white rounded-lg py-3 transition-colors text-sm font-bold shadow-lg">
+                <i class="fa-solid fa-arrows-rotate"></i> Iniciar Nuevo Análisis
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4">
+            <h2 class="text-xs font-bold text-unab-gray uppercase tracking-wider mb-4 border-b border-unab-border pb-2">Consultas en Profundidad</h2>
+            <div class="space-y-3">
+                <button onclick="sendQuickPrompt('Realiza un análisis profundo sobre cómo se monitorea y evalúa el Perfil de Egreso (Criterio 1). Desglosa la relación entre el Assessment interno y la END.')" class="w-full text-left p-3 rounded-lg bg-unab-blue hover:bg-unab-border border border-transparent hover:border-unab-red transition-all duration-200 text-sm text-unab-white flex items-start gap-3 shadow-sm group">
+                    <i class="fa-solid fa-magnifying-glass-chart mt-1 text-unab-red group-hover:scale-110 transition-transform"></i>
+                    <span class="leading-snug">Monitoreo Perfil de Egreso (Assessment vs END)</span>
+                </button>
+                <button onclick="sendQuickPrompt('Explica detalladamente las condiciones de ingreso, nivelación y fortalecimiento del plan de estudios (Criterio 2).')" class="w-full text-left p-3 rounded-lg bg-unab-blue hover:bg-unab-border border border-transparent hover:border-unab-red transition-all duration-200 text-sm text-unab-white flex items-start gap-3 shadow-sm group">
+                    <i class="fa-solid fa-stairs mt-1 text-unab-red group-hover:scale-110 transition-transform"></i>
+                    <span class="leading-snug">Plan de Estudios y Nivelación</span>
+                </button>
+                <button onclick="sendQuickPrompt('Resume analíticamente las principales conclusiones y el contexto general del informe de autoevaluación.')" class="w-full text-left p-3 rounded-lg bg-unab-blue hover:bg-unab-border border border-transparent hover:border-unab-red transition-all duration-200 text-sm text-unab-white flex items-start gap-3 shadow-sm group">
+                    <i class="fa-solid fa-book-open mt-1 text-unab-red group-hover:scale-110 transition-transform"></i>
+                    <span class="leading-snug">Síntesis y Contexto de la Carrera</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-unab-border text-xs text-unab-gray text-center flex flex-col items-center justify-center gap-2 bg-unab-blue">
+            <span class="font-bold">Universidad Andrés Bello</span>
+            <button onclick="clearApiKey()" class="text-unab-gray/50 hover:text-unab-red transition-colors underline decoration-dotted">Cerrar Sesión (Borrar Clave)</button>
+        </div>
+    </aside>
+
+    <!-- Área Principal de Chat -->
+    <main class="flex-1 flex flex-col h-full relative bg-unab-blue">
+        <header class="md:hidden bg-unab-panel border-b border-unab-border p-4 flex items-center justify-between z-10 shadow-md">
+            <h1 class="text-white font-bold text-sm"><i class="fa-solid fa-shield-halved text-unab-red mr-2"></i> Educación Física UNAB</h1>
+            <button onclick="resetChat()" class="text-unab-red font-bold text-sm bg-white/10 px-3 py-1 rounded">Nuevo</button>
+        </header>
+
+        <div id="chat-container" class="flex-1 overflow-y-auto scroll-smooth relative">
+            <div class="fixed inset-0 flex items-center justify-center pointer-events-none opacity-5 z-0">
+                <i class="fa-solid fa-building-columns text-[30rem] text-white"></i>
+            </div>
+
+            <div id="welcome-screen" class="max-w-4xl mx-auto p-6 md:p-12 pt-10 relative z-10">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-5xl font-bold text-unab-white mb-4 tracking-tight">Informe Pedagogía en Educación Física</h2>
+                    <h3 class="text-xl md:text-2xl font-light text-unab-red mb-6">Universidad Andrés Bello</h3>
+                    <p class="text-lg text-unab-gray max-w-2xl mx-auto border-t border-unab-border pt-6">
+                        Asistente algorítmico diseñado para el análisis profundo del proceso formativo, criterios de calidad y progresión curricular.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                    <div class="bg-unab-panel border border-unab-border p-6 rounded-xl hover:border-unab-red transition-colors shadow-lg">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="bg-unab-blue p-3 rounded-lg"><i class="fa-solid fa-bullseye text-unab-red text-xl"></i></div>
+                            <h3 class="text-unab-white font-bold text-lg">Criterio 1: Perfil de Egreso</h3>
+                        </div>
+                        <p class="text-sm text-unab-gray leading-relaxed mb-3">
+                            Análisis exhaustivo del diseño, validación y actualización del perfil. Evaluación rigurosa de su consistencia interna y externa frente a las demandas del medio.
+                        </p>
+                        <div class="text-xs bg-unab-blue px-3 py-2 rounded text-unab-white border-l-2 border-unab-red">
+                            <strong>Foco analítico:</strong> Trazabilidad mediante Assessment Estudiantil y Evaluación Nacional Diagnóstica (END).
+                        </div>
+                    </div>
+
+                    <div class="bg-unab-panel border border-unab-border p-6 rounded-xl hover:border-unab-red transition-colors shadow-lg">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="bg-unab-blue p-3 rounded-lg"><i class="fa-solid fa-layer-group text-unab-red text-xl"></i></div>
+                            <h3 class="text-unab-white font-bold text-lg">Criterio 2: Plan de Estudios</h3>
+                        </div>
+                        <p class="text-sm text-unab-gray leading-relaxed mb-3">
+                            Desglose de la malla curricular, evaluando la progresión de los aprendizajes y su tributación directa a las competencias declaradas.
+                        </p>
+                        <div class="text-xs bg-unab-blue px-3 py-2 rounded text-unab-white border-l-2 border-unab-red">
+                            <strong>Foco analítico:</strong> Mecanismos de ingreso, políticas de nivelación inicial y fortalecimiento formativo.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="chat-history" class="max-w-4xl mx-auto p-4 md:p-8 space-y-8 pb-40 hidden relative z-10">
+                <!-- Mensajes -->
+            </div>
+            <div id="scroll-anchor" class="h-32"></div>
+        </div>
+
+        <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-unab-blue via-unab-blue to-transparent pt-12 pb-6 px-4 md:px-8 z-20">
+            <div class="max-w-4xl mx-auto relative">
+                <div class="relative flex items-end bg-unab-panel rounded-xl border-2 border-unab-border shadow-2xl overflow-hidden focus-within:border-unab-red transition-colors">
+                    <textarea 
+                        id="user-input" 
+                        rows="1" 
+                        class="w-full bg-transparent border-none text-unab-white placeholder-unab-gray/50 pl-5 pr-16 py-4 focus:ring-0 resize-none max-h-48 text-base" 
+                        placeholder="Ingrese su consulta analítica sobre el informe..."
+                        oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"
+                        onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"
+                    ></textarea>
+                    <button id="send-btn" onclick="sendMessage()" class="absolute right-3 bottom-3 p-3 bg-unab-red hover:bg-unab-redHover text-white rounded-lg transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <i class="fa-solid fa-paper-plane text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- 1. LÓGICA DE AUTENTICACIÓN LOCAL ---
+        let apiKey = localStorage.getItem('unab_gemini_api_key') || "";
+        
+        document.addEventListener("DOMContentLoaded", () => {
+            if (!apiKey) {
+                document.getElementById('auth-modal').classList.remove('hidden');
+            }
+        });
+
+        function saveApiKey() {
+            const input = document.getElementById('api-key-input').value.trim();
+            if (input) {
+                apiKey = input;
+                localStorage.setItem('unab_gemini_api_key', apiKey);
+                document.getElementById('auth-modal').classList.add('hidden');
+            } else {
+                alert("Por favor, ingrese una clave válida.");
+            }
+        }
+
+        function clearApiKey() {
+            localStorage.removeItem('unab_gemini_api_key');
+            location.reload(); // Recarga la página para volver a pedir la clave
+        }
+
+        // --- 2. LÓGICA DE LA IA ---
+        const systemPrompt = `Eres un Algoritmo de Análisis Académico Avanzado, diseñado para evaluar en profundidad el "Informe de Autoevaluación" de la carrera de Pedagogía en Educación Física de la Universidad Andrés Bello (UNAB).
+        REGLAS ESTRICTAS DE PRIVACIDAD:
+        1. BAJO NINGUNA CIRCUNSTANCIA menciones los nombres de las personas que elaboraron el informe o el comité curricular.
+        2. BAJO NINGUNA CIRCUNSTANCIA menciones fechas exactas de elaboración o entrega del informe.
+        CONTEXTO INSTITUCIONAL DISPONIBLE:
+        - Institución: Universidad Andrés Bello (UNAB).
+        - Programa: Pedagogía en Educación Física.
+        - Entidad supervisora: VRAC.
+        - Criterio 1 (Perfil de Egreso): Abarca diseño, validación y actualización. Consistencia interna y externa. Monitoreo a través del cruce de datos entre Assessment del Aprendizaje Estudiantil (interno) y Evaluación Nacional Diagnóstica END (externa).
+        - Criterio 2 (Plan de Estudios): Caracterización del currículum, ingreso, nivelación temprana y fortalecimiento del proceso formativo.
+        INSTRUCCIONES: RESPONDE EN PROFUNDIDAD. Usa formato Markdown. Tono: auditor de calidad institucional.`;
+
+        const chatHistory = document.getElementById('chat-history');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const scrollAnchor = document.getElementById('scroll-anchor');
+        let isFirstMessage = true;
+
+        function resetChat() {
+            chatHistory.innerHTML = '';
+            chatHistory.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+            isFirstMessage = true;
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            userInput.focus();
+        }
+
+        function sendQuickPrompt(text) {
+            userInput.value = text;
+            userInput.style.height = 'auto';
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            if (!apiKey) {
+                document.getElementById('auth-modal').classList.remove('hidden');
+                return;
+            }
+
+            if (isFirstMessage) {
+                welcomeScreen.classList.add('hidden');
+                chatHistory.classList.remove('hidden');
+                isFirstMessage = false;
+            }
+
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            sendBtn.disabled = true;
+
+            appendMessage('user', message);
+            const loadingId = appendLoadingIndicator();
+
+            try {
+                const aiResponseText = await fetchGeminiWithBackoff(message);
+                document.getElementById(loadingId).remove();
+                const htmlContent = marked.parse(aiResponseText);
+                appendMessage('ai', htmlContent, true);
+            } catch (error) {
+                document.getElementById(loadingId).remove();
+                if(error.message.includes('400') || error.message.includes('API key not valid')) {
+                    appendMessage('ai', '<p class="text-unab-red font-bold"><i class="fa-solid fa-key mr-2"></i> Error: La Clave de Acceso proporcionada es incorrecta o ha expirado. Por favor, cierra sesión en la barra lateral e ingresa una clave válida.</p>', true);
+                } else {
+                    appendMessage('ai', '<p class="text-unab-red font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Error de conexión. Verifique su red.</p>', true);
+                }
+            } finally {
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        function appendMessage(role, content, isHtml = false) {
+            const div = document.createElement('div');
+            div.className = `flex gap-5 ${role === 'user' ? 'flex-row-reverse' : ''} fade-in w-full`;
+
+            const avatar = document.createElement('div');
+            avatar.className = `flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-xl shadow-lg border-2 ${
+                role === 'user' ? 'bg-unab-white text-unab-blue border-unab-white' : 'bg-unab-red text-white border-unab-red'
+            }`;
+            avatar.innerHTML = role === 'user' ? '<i class="fa-solid fa-user-tie"></i>' : '<i class="fa-solid fa-microchip"></i>';
+
+            const bubble = document.createElement('div');
+            bubble.className = `w-full max-w-[85%] rounded-2xl px-8 py-6 shadow-xl ${
+                role === 'user' 
+                ? 'bg-unab-panel border border-unab-border text-unab-white rounded-tr-none' 
+                : 'bg-transparent border border-unab-border bg-unab-panel/50 text-unab-gray rounded-tl-none markdown-body'
+            }`;
+
+            if (isHtml) bubble.innerHTML = content;
+            else bubble.textContent = content; 
+
+            div.appendChild(avatar);
+            div.appendChild(bubble);
+            chatHistory.appendChild(div);
+            scrollToBottom();
+        }
+
+        function appendLoadingIndicator() {
+            const id = 'loading-' + Date.now();
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = `flex gap-5 fade-in w-full`;
+            div.innerHTML = `
+                <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-unab-red text-white border-2 border-unab-red flex items-center justify-center text-xl shadow-lg">
+                    <i class="fa-solid fa-microchip"></i>
+                </div>
+                <div class="bg-transparent border border-unab-border bg-unab-panel/50 rounded-2xl rounded-tl-none px-8 py-6 shadow-xl flex items-center">
+                    <span class="text-unab-gray text-sm mr-3 font-bold tracking-widest uppercase">Analizando</span>
+                    <div class="typing-indicator"><span></span><span></span><span></span></div>
+                </div>
+            `;
+            chatHistory.appendChild(div);
+            scrollToBottom();
+            return id;
+        }
+
+        function scrollToBottom() {
+            scrollAnchor.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+
+        async function fetchGeminiWithBackoff(promptText) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "Análisis no concluyente.";
+        }
+    </script>
+</body>
+</html>
